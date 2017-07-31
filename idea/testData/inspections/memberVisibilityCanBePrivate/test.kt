@@ -206,8 +206,10 @@ fun withLocal(): Int {
     return local.res()
 }
 
-annotation class Published
+annotation class Published(val arg: Int) {
+    override fun toString() = arg.toString()
+}
 
 class Math {
-    @Published fun fact(n: Int) = if (n < 2) 1 else n * fact(n - 1)
+    @Published(42) fun fact(n: Int) = if (n < 2) 1 else n * fact(n - 1)
 }
