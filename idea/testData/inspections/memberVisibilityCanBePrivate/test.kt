@@ -205,3 +205,9 @@ fun withLocal(): Int {
     val local = Local(42)
     return local.res()
 }
+
+annotation class Published
+
+class Math {
+    @Published fun fact(n: Int) = if (n < 2) 1 else n * fact(n - 1)
+}
