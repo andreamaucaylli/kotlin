@@ -31,6 +31,10 @@ import org.jetbrains.kotlin.android.lint.AbstractKotlinLintTest
 import org.jetbrains.kotlin.android.parcel.AbstractParcelBytecodeListingTest
 import org.jetbrains.kotlin.android.quickfix.AbstractAndroidLintQuickfixTest
 import org.jetbrains.kotlin.android.quickfix.AbstractAndroidQuickFixMultiFileTest
+import org.jetbrains.kotlin.android.synthetic.test.AbstractAndroidBoxTest
+import org.jetbrains.kotlin.android.synthetic.test.AbstractAndroidBytecodeShapeTest
+import org.jetbrains.kotlin.android.synthetic.test.AbstractAndroidSyntheticPropertyDescriptorTest
+import org.jetbrains.kotlin.annotation.AbstractAnnotationProcessorBoxTest
 import org.jetbrains.kotlin.asJava.AbstractCompilerLightClassTest
 import org.jetbrains.kotlin.cfg.AbstractControlFlowTest
 import org.jetbrains.kotlin.cfg.AbstractDataFlowTest
@@ -86,6 +90,7 @@ import org.jetbrains.kotlin.idea.debugger.evaluate.*
 import org.jetbrains.kotlin.idea.decompiler.navigation.AbstractNavigateToDecompiledLibraryTest
 import org.jetbrains.kotlin.idea.decompiler.navigation.AbstractNavigateToLibrarySourceTest
 import org.jetbrains.kotlin.idea.decompiler.stubBuilder.AbstractClsStubBuilderTest
+import org.jetbrains.kotlin.idea.decompiler.stubBuilder.AbstractLoadJavaClsStubTest
 import org.jetbrains.kotlin.idea.decompiler.textBuilder.AbstractCommonDecompiledTextFromJsMetadataTest
 import org.jetbrains.kotlin.idea.decompiler.textBuilder.AbstractCommonDecompiledTextTest
 import org.jetbrains.kotlin.idea.decompiler.textBuilder.AbstractJsDecompiledTextFromJsMetadataTest
@@ -155,10 +160,6 @@ import org.jetbrains.kotlin.jvm.runtime.AbstractJvmRuntimeDescriptorLoaderTest
 import org.jetbrains.kotlin.kapt3.test.AbstractClassFileToSourceStubConverterTest
 import org.jetbrains.kotlin.kapt3.test.AbstractKotlinKaptContextTest
 import org.jetbrains.kotlin.kdoc.AbstractKDocLexerTest
-import org.jetbrains.kotlin.android.synthetic.test.AbstractAndroidBoxTest
-import org.jetbrains.kotlin.android.synthetic.test.AbstractAndroidBytecodeShapeTest
-import org.jetbrains.kotlin.android.synthetic.test.AbstractAndroidSyntheticPropertyDescriptorTest
-import org.jetbrains.kotlin.annotation.AbstractAnnotationProcessorBoxTest
 import org.jetbrains.kotlin.modules.xml.AbstractModuleXmlParserTest
 import org.jetbrains.kotlin.multiplatform.AbstractMultiPlatformIntegrationTest
 import org.jetbrains.kotlin.noarg.AbstractBlackBoxCodegenTestForNoArg
@@ -906,6 +907,10 @@ fun main(args: Array<String>) {
             model("decompiler/stubBuilder", extension = null, recursive = false)
         }
 
+        testClass<AbstractLoadJavaClsStubTest> {
+            model("/compiler/testData/loadJava/compiledKotlin", testMethod = "doTestCompiledKotlin")
+        }
+
         testClass<AbstractJvmOptimizeImportsTest> {
             model("editor/optimizeImports/jvm", pattern = KT_WITHOUT_DOTS_IN_NAME)
             model("editor/optimizeImports/common", pattern = KT_WITHOUT_DOTS_IN_NAME)
@@ -1465,7 +1470,7 @@ class TestGroup(val testsRoot: String, val testDataRoot: String) {
         val testModels = ArrayList<TestClassModel>()
 
         fun model(
-                relativeRootPath: String,
+                rootPath: String,
                 recursive: Boolean = true,
                 excludeParentDirs: Boolean = false,
                 extension: String? = "kt", // null string means dir (name without dot)
@@ -1478,7 +1483,7 @@ class TestGroup(val testsRoot: String, val testDataRoot: String) {
                 filenameStartsLowerCase: Boolean? = null,
                 skipIgnored: Boolean = false
         ) {
-            val rootFile = File(testDataRoot + "/" + relativeRootPath)
+            val rootFile = if (rootPath.startsWith("/")) File(rootPath.substring(1)) else File(testDataRoot + "/" + rootPath)
             val compiledPattern = Pattern.compile(pattern)
             val className = testClassName ?: TestGeneratorUtil.fileNameToJavaIdentifier(rootFile)
             testModels.add(
